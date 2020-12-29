@@ -1,0 +1,428 @@
+#include <stdio.h>
+#include <malloc.h>
+#include <string.h>
+#include <ctype.h>
+#include<graphics.h>
+/*----------------------------------------------------------------------------*/
+/* Define Functions*/
+
+void addNewcontact(void);
+void listAll(void);
+void deletecontact(void);
+void modifycontact(void);
+int findcontact(void);
+int prompt(void);
+int findnum (int);
+
+/*----------------------------------------------------------------------------*/
+/* Define Structures*/
+
+typedef struct contact {
+    int number;
+    char name[20];
+    char phone[15];
+    char email[20];
+    struct contact *next;
+    } Contact;
+Contact *firstc,*currentc,*newc;
+int cnum = 0;
+
+
+/*----------------------------------------------------------------------------*/
+/* Main Function */
+
+int main()
+{
+    initwindow(1000,600,"My window");
+
+    FILE *datafile;
+    char *filename = "contactdatabase.dat";
+    char ch;
+    firstc = NULL;
+
+    datafile = fopen(filename,"r");
+
+    if(datafile)
+    {
+	    firstc = (struct contact *)malloc(sizeof(struct contact));
+
+	    currentc = firstc;
+	    while(1)
+     	    {
+		    newc = (struct contact *)malloc(sizeof(struct contact));
+		    fread(currentc,sizeof(struct contact),1,datafile);
+		    if(currentc->next == NULL)
+			    break;
+		    currentc->next = newc;
+		    currentc = newc;
+	    }
+	    fclose(datafile);
+	    cnum = currentc->number;
+
+    }
+    setcolor(7);
+    settextstyle(BOLD_FONT,HORIZ_DIR,3);
+    outtextxy(200,35,"Welcome To The Contact Database");
+    do
+    {
+	fflush(stdin);
+
+        outtextxy(100,85,"1 - Add a new contact");
+        outtextxy(100,110,"2 - Delete contact");
+        outtextxy(100,135,"3 - List all contacts");
+        outtextxy(100,160,"4 - Modify contact");
+        outtextxy(100,185,"5 - Find a contact by number");
+        outtextxy(100,210,"Q - Save and quit");
+        outtextxy(110,235,"Your choice ");
+        printf("\tYour choice:");
+        ch = getchar();
+	    ch = toupper(ch);
+        switch(ch)
+        {
+        case '1':
+                setbkcolor(CYAN);
+                cleardevice();
+                setcolor(BLUE);
+                outtextxy(300,75,"Add new contact");
+                line(300,98,514,98);
+                fflush(stdin);
+                addNewcontact();
+                cleardevice();
+                setcolor(7);
+                break;
+	    case '2':
+                setbkcolor(CYAN);
+                cleardevice();
+                setcolor(RED);
+                deletecontact();
+                cleardevice();
+                setcolor(7);
+                break;
+	    case '3':
+                setbkcolor(CYAN);
+                cleardevice();
+                setcolor(5);
+                listAll();
+                getch();
+                cleardevice();
+                setcolor(7);
+                break;
+	    case '4':
+                setbkcolor(CYAN);
+                cleardevice();
+                setcolor(YELLOW);
+                modifycontact();
+                cleardevice();
+                setcolor(7);
+                break;
+	    case '5':
+                setbkcolor(CYAN);
+                cleardevice();
+                setcolor(9);
+                outtextxy(300,40,"Find a contact by number");
+                line(300,63,635,63);
+                findcontact();
+                cleardevice();
+                setcolor(7);
+                break;
+            case 'Q':
+                puts("Save and quit\n");
+            default:
+                break;
+        }
+    }
+    while(ch != 'Q');
+
+/*
+ * Save the records to disk
+ */
+    currentc = firstc;
+
+    if(currentc == NULL)
+	    return(0);
+
+    datafile = fopen(filename,"w");
+    if(datafile == NULL)
+    {
+	    printf("Error writing to %s\n",filename);
+	    return(1);
+    }
+
+    while(currentc != NULL)
+    {
+	    fwrite(currentc,sizeof(struct contact),1,datafile);
+	    currentc = currentc->next;
+    }
+    fclose(datafile);
+
+        return(0);
+}
+/*----------------------------------------------------------------------------*/
+void addNewcontact(void) /* add new contact function*/
+{
+    newc = (struct contact *)malloc(sizeof(struct contact));
+
+
+
+    if(firstc==NULL)
+        firstc = currentc = newc;
+
+
+    else
+    {
+        currentc = firstc;
+
+        while(currentc->next != NULL)currentc = currentc->next;
+
+        currentc->next = newc;
+        currentc = newc;
+    }
+
+/* update the structure */
+
+    cnum++;
+    char a[50],b[50],c[50],d[50];
+    sprintf(a,"Serial number : %d",cnum);
+    outtextxy(80,140,a);
+    currentc->number = cnum;
+
+    outtextxy(80,175,"Enter contact name");
+    gets(currentc->name);
+    sprintf(b,"Contact name : %s",currentc->name);
+    outtextxy(100,200,b);
+    line(75,235,475,235);
+
+    outtextxy(80,250,"Enter contact Phone number");
+    gets(currentc->phone);
+    sprintf(c,"Phone number: %s",currentc->phone);
+    outtextxy(100,275,c);
+    line(75,310,475,310);
+
+    outtextxy(80,325,"Enter contact email");
+    gets(currentc->email);
+    sprintf(d,"Contact email address : %s",currentc->email);
+    outtextxy(100,350,d);
+    line(75,385,800,385);
+
+    outtextxy(250,450,"Record added");
+    getch();
+
+
+
+    currentc->next = NULL;
+}
+/*----------------------------------------------------------------------------*/
+void listAll(void) /* list all contacts function*/
+{
+    if(firstc==NULL)
+        outtextxy(200,250,"There are no contacts to display!");
+
+    else
+    {
+        rectangle(30,20,970,250);
+        line(30,80,970,80);
+        line(145,20,145,250);
+        line(400,20,400,250);
+        line(600,20,600,250);
+        outtextxy(2,50,"    Acct#         Name            Phone               Email");
+
+        currentc=firstc;
+        int y=100;
+        do
+        {
+            char a[100];
+            sprintf(a," %d       %s      %s    %s",currentc->number,currentc->name,currentc->phone,currentc->email);
+
+               outtextxy(75,y,a);
+               y=y+25;
+
+        }
+
+        while((currentc=currentc->next) != NULL);
+    }
+    settextstyle(BOLD_FONT,HORIZ_DIR,3);
+
+}
+/*----------------------------------------------------------------------------*/
+void deletecontact(void)     /*delete contact function */
+{
+    int record;
+    char x[50];
+    struct contact *previousa;
+
+    if(firstc==NULL)
+    {
+        outtextxy(300,40,"Delete contact");
+        line(300,63,492,63);
+        outtextxy(200,250,"There are no contacts to delete!");
+        getch();
+	return;
+    }
+
+    listAll();
+    outtextxy(300,310,"Delete contact");
+    line(300,333,492,333);
+    outtextxy(100,400,"Enter contact account number to delete");
+    scanf("%d",&record);
+
+    currentc = firstc;
+
+    while(currentc != NULL)
+    {
+        if(currentc->number == record)
+	{
+	    if(currentc == firstc)
+		firstc=currentc->next;
+	    else
+		previousa->next = currentc->next;
+        free(currentc);
+        sprintf(x,"contact %d deleted!",record);
+        outtextxy(100,450,x);
+        getch();
+	    return;
+	}
+
+	else
+	{
+        previousa = currentc;
+	    currentc = currentc->next;
+	}
+    }
+    sprintf(x,"contact %d not found!",record);
+    outtextxy(100,450,x);
+    getch();
+ }
+/*----------------------------------------------------------------------------*/
+void modifycontact(void)   /*modify contact function*/
+{
+    int record, result;
+
+    if(firstc==NULL)
+    {
+        outtextxy(300,40,"Modify a contact");
+        line(300,63,526,63);
+        outtextxy(200,250,"There are no contacts to modify!");
+        getch();
+        return;
+    }
+
+    listAll();
+    char a[50],b[50],c[50],d[50],e[50];
+    outtextxy(300,300,"Modify a contact");
+    line(300,323,526,323);
+    outtextxy(100,370,"Enter contact account number to modify or change");
+    scanf("%d",&record);
+
+    result = findnum(record);
+
+    if( result >0 ){
+
+        sprintf(a,"Contact %d:",currentc->number);
+	    outtextxy(100,425,a);
+	    sprintf(b,"Name: %s",currentc->name);
+	    outtextxy(150,450,b);
+	    if(prompt())
+		    gets(currentc->name);
+        sprintf(c,"Phone: %s",currentc->phone);
+        outtextxy(150,475,c);
+	    if(prompt())
+		    gets(currentc->phone);
+        sprintf(d,"Email: %s",currentc->email);
+        outtextxy(150,500,d);
+	    if(prompt())
+		    gets(currentc->email);
+        outtextxy(200,525,"Contact updated");
+        getch();
+	    return;
+	}
+	sprintf(e,"contact %d was not found!",record);
+	outtextxy(100,400,e);
+	getch();
+}
+/*----------------------------------------------------------------------------*/
+int findnum (int recordnum)
+{
+    int record;
+    record = recordnum;
+    currentc = firstc;
+    while(currentc != NULL)
+    {
+
+        if(currentc->number == record)
+	     {
+           return 1;
+         }
+
+	else
+	{
+	    currentc = currentc->next;
+	}
+    }
+    return -1;
+}
+/*----------------------------------------------------------------------------*/
+int findcontact(void) /* find contact function*/
+{
+     char buff[20];
+
+     if(firstc==NULL)
+	{
+	    outtextxy(270,250,"There are no contacts to find!");
+	    getch();
+	    return 1;
+    }
+    outtextxy(100,150,"Enter contact number");
+    fflush(stdin);
+    gets(buff);
+
+    currentc = firstc;
+    while(currentc != NULL)
+    {
+        if( strcmp(currentc->phone, buff) == 0 )
+	    {
+	        rectangle(30,240,970,380);
+	        line(30,300,970,300);
+	        line(145,240,145,380);
+	        line(400,240,400,380);
+	        line(600,240,600,380);
+	        char a[100];
+            outtextxy(2,260,"    Acct#         Name            Phone               Email");
+             sprintf(a," %d       %s      %s      %s",currentc->number,currentc->name,currentc->phone,currentc->email);
+               outtextxy(73,330,a);
+               getch();
+
+			return 0;
+	    }
+		else
+		{
+			currentc = currentc->next;
+		}
+    }
+    char b[50];
+    sprintf(b,"contact %s was not found!",buff);
+    outtextxy(150,250,b);
+    getch();
+          return 1;
+}
+/*----------------------------------------------------------------------------*/
+int prompt(void)
+{
+	char ch;
+
+    fflush(stdin);
+	printf("Update? (Y to update any other key to not)");
+	ch = getchar();
+	ch = toupper(ch);
+	fflush(stdin);
+	if(ch == 'Y')
+	{
+		printf("Enter new value: ");
+		return(1);
+	}
+	else
+		return(0);
+}
+/*----------------------------------------------------------------------------*/
+
+/* END OF PROGRAM */
+
