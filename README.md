@@ -1,4 +1,4 @@
-# Contact-Managemnet-System-using-linked-list
+# Contact-Management-System-using-linked-list
 CMS using linked list with graphics in c language
 
 ⦁	In this  project, we can add, view, edit, search and delete contacts.
